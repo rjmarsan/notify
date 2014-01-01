@@ -1,11 +1,14 @@
 package com.rj.notify;
 
+import android.app.Notification;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.util.Log;
 
 public class NotificationListener extends NotificationListenerService {
-	private String TAG = this.getClass().getSimpleName();
+	private static final String TAG = NotificationListener.class.getSimpleName();
+	
+	private static final String DEFAULT_NOTIFICATION = "content://settings/system/notification_sound";
 	
 	AudioSynthesis audioSynthesis;
 
@@ -18,8 +21,17 @@ public class NotificationListener extends NotificationListenerService {
 	@Override
 	public void onNotificationPosted(StatusBarNotification sbn) {
 		Log.i(TAG, "**********  onNotificationPosted");
-		Log.i(TAG, "ID :" + sbn.getId() + "t" + sbn.getNotification().tickerText + "t" + sbn.getPackageName());
-		audioSynthesis.onNotification("rj", sbn.getPackageName(), sbn.getNotification().tickerText.toString());
+		Notification notification = sbn.getNotification();
+		Log.i(TAG, String.format("ID : %s, text: %s, package: %s, sound: %s, default: %s", sbn.getId(), notification.tickerText, sbn.getPackageName(), notification.sound, ""+notification.defaults));
+		if (notificationPlaysDefaultSound(notification)) {
+			audioSynthesis.onNotification("rj", sbn.getPackageName(), notification.tickerText.toString());
+		}
+	}
+	
+	private boolean notificationPlaysDefaultSound(Notification notification) {
+		return (notification.sound != null &&
+				DEFAULT_NOTIFICATION.equals(notification.sound.toString())
+				|| ((notification.defaults & Notification.DEFAULT_ALL) != 0));
 	}
 
 	@Override

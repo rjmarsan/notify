@@ -28,6 +28,16 @@ public class AudioSynthesis {
 	public void onNotification(String user, String app, String text) {
 		double[] notes = generateNotes(user, app, text);
 		playback.playSound(audioGenerator.generateAudioPattern(44100/5, 44100/2, notes));
+		new Thread() {
+			public void run() {
+				try {
+					Thread.sleep(3000);
+				} catch (InterruptedException e) {
+					// Don't care.
+				}
+				playback.destroyAudioTrack();
+			}
+		}.start();
 	}
 	
 	private double[] generateNotes(String user, String app, String text) {
@@ -93,6 +103,7 @@ public class AudioSynthesis {
 		@Override
 		public double[] generateAudioPattern(int samples, int sampleRate, double[] frequencies) {
 			double[] sample = new double[samples];
+			final double vol = 0.8;
 			final int numFrequencies = frequencies.length;
 			final double samplesPerFrequency = samples / numFrequencies;
 			int itotal = 0;
@@ -103,7 +114,7 @@ public class AudioSynthesis {
 					double amp = Math.sin(i / samplesPerFrequency * Math.PI);
 					// sample[itotal++] = Math.sin(2 * Math.PI * i / (sampleRate / frequency)) * amp; // SINE WAVE
 					// sample[itotal++] = Math.abs( (i % (samplesPerCycle)) / samplesPerCycle - 0.5 ) * 2 * amp; // TRIANGLE WAVE
-					sample[itotal++] = Math.pow(Math.abs( (i % (samplesPerCycle)) / samplesPerCycle - 0.5 ) * 2, 1.5) * amp; // TRIANGLE CURVE WAVE
+					sample[itotal++] = Math.pow(Math.abs( (i % (samplesPerCycle)) / samplesPerCycle - 0.5 ) * 2, 1.5) * amp * vol; // TRIANGLE CURVE WAVE
 				}
 			}
 			return sample;

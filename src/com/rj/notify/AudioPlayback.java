@@ -36,6 +36,10 @@ public class AudioPlayback {
 
 	public void playRawSound(byte[] samples) {
 		// FIXME sometimes audioTrack isn't initialized
+		// If we still have a pending audio track, delete it before we create a new one.
+		if (audioTrack != null) {
+			destroyAudioTrack();
+		}
 		audioTrack = new AudioTrack(AudioManager.STREAM_NOTIFICATION, sampleRate,
 				AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT,
 				samples.length, AudioTrack.MODE_STATIC);
@@ -46,6 +50,7 @@ public class AudioPlayback {
 	public void destroyAudioTrack() {
 		audioTrack.stop();
 		audioTrack.release();
+		audioTrack = null;
 	}
 
 }
