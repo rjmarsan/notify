@@ -28,6 +28,12 @@ public class MainActivity extends Activity {
 				gotoSecuritySettings();
 			}
 		});
+        ((Button)findViewById(R.id.notification_settings)).setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				gotoSoundSettings();
+			}
+		});
     }
 
 
@@ -64,6 +70,12 @@ public class MainActivity extends Activity {
     
     private void gotoSecuritySettings() {
     	Intent intent=new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
+    	startActivity(intent);
+    }
+    
+    private void gotoSoundSettings() {
+//    	startActivityForResult(new Intent(android.provider.Settings.ACTION_SOUND_SETTINGS, 0));
+    	Intent intent=new Intent(android.provider.Settings.ACTION_SOUND_SETTINGS);
     	startActivity(intent);
     }
     
