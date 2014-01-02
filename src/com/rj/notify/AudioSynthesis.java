@@ -5,14 +5,26 @@ import java.util.Arrays;
 import midiReference.MidiReference;
 import midiReference.NoteReference;
 import midiReference.ScaleReference;
+import android.annotation.SuppressLint;
 import android.util.Log;
 
 
+@SuppressLint("DefaultLocale") 
 public class AudioSynthesis {
 	private String TAG = this.getClass().getSimpleName();
 
 	public static interface AudioGenerator {
-		public double[] generateAudioPattern(int samples, int sampleRate, double[] frequencies);
+		public double[] generateAudioPattern(int samples, int sampleRate, NotePattern pattern);
+	}
+	
+	private static class NotePattern {
+		public final double[] frequencies;
+		public final double[] volumes;
+		
+		public NotePattern(double[] frequencies, double[] volumes) {
+			this.frequencies = frequencies;
+			this.volumes = volumes;
+		}
 	}
 
 	private final AudioPlayback playback;
@@ -26,7 +38,7 @@ public class AudioSynthesis {
 	}
 	
 	public void onNotification(String user, String app, String text) {
-		double[] notes = generateNotes(user, app, text);
+		NotePattern notes = generateNotes(user, app, text);
 		playback.playSound(audioGenerator.generateAudioPattern(44100/5, 44100/2, notes));
 		new Thread() {
 			public void run() {
@@ -40,8 +52,13 @@ public class AudioSynthesis {
 		}.start();
 	}
 	
-	private double[] generateNotes(String user, String app, String text) {
-		int[] scale = MidiReference.createScale(ScaleReference.MAJOR, NoteReference.C);
+	private NotePattern generateNotes(String user, String app, String text) {
+		int[] scaleSmall = MidiReference.createScale(ScaleReference.MAJOR, NoteReference.C);
+		int[] scale = new int[scaleSmall.length * 2];
+		for (int i = 0; i < scaleSmall.length; i++) {
+			scale[i] = scaleSmall[i];
+			scale[i + scaleSmall.length] = scaleSmall[i] + 12;
+		}
 		int startNote = 55;
 		Log.d(TAG, "Scale: "+Arrays.toString(scale));
 		String appCharacters = parsePackage(app);
@@ -51,15 +68,17 @@ public class AudioSynthesis {
 		Log.d(TAG, String.format("App: %s, App chars: %s, Text: %s, Text chars: %s, Total: %s", app, appCharacters, text, textCharacters, allChars));
 		int[] notes = new int[allChars.length()];
 		double[] frequencies = new double[notes.length];
+		double[] volumes = new double[notes.length];
 		for (int i = 0; i < allChars.length(); i++) {
 			int c = allChars.codePointAt(i);
 			int indexInScale = c % scale.length;
-			int note = scale[indexInScale] + startNote;
+			int note = scale[indexInScale];
 			notes[i] = note;
-			frequencies[i] = midiReference.getNoteFrequency(note);
+			frequencies[i] = midiReference.getNoteFrequency(note + startNote);
+			volumes[i] = Math.min(1, ((double)scale.length - indexInScale) / scale.length + 0.4);
 		}
-		Log.d(TAG, String.format("Notes: %s, Frequencies: %s", Arrays.toString(notes), Arrays.toString(frequencies)));
-		return frequencies;
+		Log.d(TAG, String.format("Notes: %s, Frequencies: %s, Volumes: %s", Arrays.toString(notes), Arrays.toString(frequencies), Arrays.toString(volumes)));
+		return new NotePattern(frequencies, volumes);
 	}
 	
 	/**
@@ -94,27 +113,34 @@ public class AudioSynthesis {
 	 * @return
 	 */
 	private String parseText(String text) {
-		return "" + text.charAt(0) + text.charAt(text.length() - 1);
+		if (text.length() == 0) {
+			return "  ";
+		} else if (text.length() == 1) {
+			return text + " ";
+		} else {
+			return text.substring(0, 2);
+		}
 	}
 	
 	
 	
 	private class DefaultAudioGenerator implements AudioGenerator {
 		@Override
-		public double[] generateAudioPattern(int samples, int sampleRate, double[] frequencies) {
+		public double[] generateAudioPattern(int samples, int sampleRate, NotePattern pattern) {
 			double[] sample = new double[samples];
 			final double vol = 0.8;
-			final int numFrequencies = frequencies.length;
+			final int numFrequencies = pattern.frequencies.length;
 			final double samplesPerFrequency = samples / numFrequencies;
 			int itotal = 0;
 			for (int f = 0; f < numFrequencies; f++) {
-				final double frequency = frequencies[f];
+				final double frequency = pattern.frequencies[f];
+				final double noteVolume = pattern.volumes[f];
 				final double samplesPerCycle = sampleRate / frequency;
 				for (double i = 0; i < samplesPerFrequency; i++) {
-					double amp = Math.sin(i / samplesPerFrequency * Math.PI);
+					double amp = Math.sin(i / samplesPerFrequency * Math.PI) * noteVolume * vol;
 					// sample[itotal++] = Math.sin(2 * Math.PI * i / (sampleRate / frequency)) * amp; // SINE WAVE
 					// sample[itotal++] = Math.abs( (i % (samplesPerCycle)) / samplesPerCycle - 0.5 ) * 2 * amp; // TRIANGLE WAVE
-					sample[itotal++] = Math.pow(Math.abs( (i % (samplesPerCycle)) / samplesPerCycle - 0.5 ) * 2, 1.5) * amp * vol; // TRIANGLE CURVE WAVE
+					sample[itotal++] = Math.pow(Math.abs( (i % (samplesPerCycle)) / samplesPerCycle - 0.5 ) * 2, 1.2) * amp; // TRIANGLE CURVE WAVE
 				}
 			}
 			return sample;
