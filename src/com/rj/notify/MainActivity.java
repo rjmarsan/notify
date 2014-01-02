@@ -65,7 +65,7 @@ public class MainActivity extends Activity {
         ncomp.setSmallIcon(R.drawable.ic_launcher);
         ncomp.setDefaults(Notification.DEFAULT_ALL);
         ncomp.setAutoCancel(true);
-        nManager.notify((int)System.currentTimeMillis(),ncomp.build());
+        nManager.notify(131923,ncomp.build());
     }
     
     private void gotoSecuritySettings() {
@@ -74,7 +74,6 @@ public class MainActivity extends Activity {
     }
     
     private void gotoSoundSettings() {
-//    	startActivityForResult(new Intent(android.provider.Settings.ACTION_SOUND_SETTINGS, 0));
     	Intent intent=new Intent(android.provider.Settings.ACTION_SOUND_SETTINGS);
     	startActivity(intent);
     }

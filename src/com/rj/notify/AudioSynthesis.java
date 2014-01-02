@@ -40,14 +40,20 @@ public class AudioSynthesis {
 	public void onNotification(String user, String app, String text) {
 		NotePattern notes = generateNotes(user, app, text);
 		playback.playSound(audioGenerator.generateAudioPattern(44100/5, 44100/2, notes));
+		// At the moment, I don't think this is needed.
+		// removePlayerWhenDone();
+	}
+	
+	private void removePlayerWhenDone() {
 		new Thread() {
 			public void run() {
 				try {
 					Thread.sleep(3000);
-				} catch (InterruptedException e) {
+					playback.destroyAudioTrack();
+				} catch (Exception e) {
 					// Don't care.
+					e.printStackTrace();
 				}
-				playback.destroyAudioTrack();
 			}
 		}.start();
 	}
