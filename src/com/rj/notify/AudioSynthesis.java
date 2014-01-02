@@ -59,7 +59,7 @@ public class AudioSynthesis {
 			scale[i] = scaleSmall[i];
 			scale[i + scaleSmall.length] = scaleSmall[i] + 12;
 		}
-		int startNote = 55;
+		int startNote = 60; // This number can be tweaked to give very different characteristics.
 		Log.d(TAG, "Scale: "+Arrays.toString(scale));
 		String appCharacters = parsePackage(app);
 		String textCharacters = parseText(text);

@@ -19,7 +19,7 @@
 	        android:layout_height="wrap_content"
 	        android:layout_alignParentTop="true"
 	        android:layout_centerHorizontal="true"
-	        android:text="Use Notify in 2 easy steps"
+	        android:text="Use Notify in 3 easy steps"
 	        android:textAppearance="?android:attr/textAppearanceLarge" />
 	
 	    <LinearLayout
