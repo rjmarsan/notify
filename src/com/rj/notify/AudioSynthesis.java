@@ -41,22 +41,22 @@ public class AudioSynthesis {
 		NotePattern notes = generateNotes(user, app, text);
 		playback.playSound(audioGenerator.generateAudioPattern(44100/5, 44100/2, notes));
 		// At the moment, I don't think this is needed.
-		// removePlayerWhenDone();
+//		removePlayerWhenDone();
 	}
 	
-	private void removePlayerWhenDone() {
-		new Thread() {
-			public void run() {
-				try {
-					Thread.sleep(3000);
-					playback.destroyAudioTrack();
-				} catch (Exception e) {
-					// Don't care.
-					e.printStackTrace();
-				}
-			}
-		}.start();
-	}
+//	private void removePlayerWhenDone() {
+//		new Thread() {
+//			public void run() {
+//				try {
+//					Thread.sleep(3000);
+//					playback.destroyAudioTrack();
+//				} catch (Exception e) {
+//					// Don't care.
+//					e.printStackTrace();
+//				}
+//			}
+//		}.start();
+//	}
 	
 	private NotePattern generateNotes(String user, String app, String text) {
 		int[] scaleSmall = MidiReference.createScale(ScaleReference.MAJOR, NoteReference.C);

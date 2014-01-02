@@ -6,11 +6,13 @@ package com.rj.notify;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
+import android.media.AudioTrack.OnPlaybackPositionUpdateListener;
+import android.util.Log;
 
 public class AudioPlayback {
+	private static final String TAG = AudioPlayback.class.getSimpleName();
 
 	private int sampleRate;
-	private AudioTrack audioTrack;
 
 	public AudioPlayback(int sampleRate) {
 		this.sampleRate = sampleRate;
@@ -35,22 +37,34 @@ public class AudioPlayback {
 	}
 
 	public void playRawSound(byte[] samples) {
+		Log.d(TAG, "Creating audio track ");
 		// FIXME sometimes audioTrack isn't initialized
-		// If we still have a pending audio track, delete it before we create a new one.
-		if (audioTrack != null) {
-			destroyAudioTrack();
-		}
-		audioTrack = new AudioTrack(AudioManager.STREAM_NOTIFICATION, sampleRate,
+		final AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_NOTIFICATION, sampleRate,
 				AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT,
 				samples.length, AudioTrack.MODE_STATIC);
 		audioTrack.write(samples, 0, samples.length);
+		audioTrack.setNotificationMarkerPosition(samples.length / 2);
+		audioTrack.setPlaybackPositionUpdateListener(new OnPlaybackPositionUpdateListener() {
+			@Override
+			public void onPeriodicNotification(AudioTrack track) {
+			}
+			@Override
+			public void onMarkerReached(AudioTrack track) {
+				try {
+					destroyAudioTrack(audioTrack);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
 		audioTrack.play();
+		Log.d(TAG, "Playing audio track "+audioTrack);
 	}
 
-	public void destroyAudioTrack() {
+	private void destroyAudioTrack(AudioTrack audioTrack) {
+		Log.d(TAG, "Destroying audio track "+audioTrack);
 		audioTrack.stop();
 		audioTrack.release();
-		audioTrack = null;
 	}
 
 }
